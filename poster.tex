@@ -1,0 +1,84 @@
+\documentclass[8pt]{beamer}
+\setbeamertemplate{navigation symbols}{}  % remove navigation symbols
+
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{amssymb,amsthm,amsmath}
+
+\lstdefinelanguage{Julia}%
+  {morekeywords={abstract,begin,break,case,catch,const,continue,do,else,elseif,%
+      end,export,false,for,function,immutable,import,importall,if,in,%
+      macro,module,otherwise,quote,return,struct,switch,true,try,typealias,%
+      using,while,Union},%
+   sensitive=true,%
+   alsoother={\$},%
+   morecomment=[l]\#,%
+   morecomment=[n]{\#=}{=\#},%
+   morestring=[s]{"}{"},%
+   morestring=[m]{'}{'},%
+}[keywords,comments,strings]%
+
+
+\lstset{
+    language = Julia,
+    escapeinside={/*}{*/},
+    basicstyle=\normalfont
+}
+
+\lstdefinelanguage{sml}{}
+
+% code inline
+\newrobustcmd{\sml}[2][]{{\sloppy
+\ifmmode
+\text{\lstinline[language=sml,#1]`#2`}
+\else{\lstinline[language=sml,#1]`#2`}%
+\fi}}
+
+\newrobustcmd{\julia}[2][]{{\sloppy
+\ifmmode
+\text{\lstinline[language=Julia,#1]`#2`}
+\else{\lstinline[language=Julia,#1]`#2`}%
+\fi}}
+
+\newcommand{\yikes}{\color{red}\textbf{ (!)}}
+
+\begin{document}
+
+\begin{frame}[fragile]
+  \frametitle{Type Unions}
+
+  Terminology: \emph{types} are prescriptive. Some examples:
+  \begin{align*}
+    \sml{unit}  &:= \sml{()} \\
+    \sml{bool}  &:= \sml{false} \mid \sml{true} \\
+    \sml{order} &:= \sml{LESS} \mid \sml{EQUAL} \mid \sml{GREATER} \\
+    \sml{nat}   &:= \sml{zero} \mid \sml{succ(nat)}
+  \end{align*}
+
+  \textit{Product types} (Cartesian product, tuples): $\tau_1 \times \tau_2$.
+
+  \noindent\rule{\linewidth}{0.4pt}
+
+  What about ``combining'' two types? One idea: $\julia{Union\{}\tau_1,\tau_2\julia{\}}$. However:
+  \begin{align*}
+    &\julia{const MightFail\{T\} = Union\{T,String\}} \\
+    &\julia{const IntMightFail = MightFail\{Int\}} &&\julia{Union\{Int,String\}} \\
+    &\julia{const StringMightFail = MightFail\{String\}} &&\julia{String} \yikes
+  \end{align*}
+
+  Alternative: \textit{sum types} (``tagged disjoint unions''): $\tau_1 + \tau_2$.
+  \begin{align*}
+    &\julia{const MightFail\{T\} = Ok\{T\} | Error\{String\}}
+  \end{align*}
+
+  Benefits:
+  \begin{itemize}
+    \item More modular -- cases are necessarily disjoint.
+    \item Easier to develop efficient data structures, since sums are ``concrete''.
+    \item Guaranteed \emph{case exhaustivity} checking! Easy to refactor code.
+  \end{itemize}
+\end{frame}
+
+\end{document}
