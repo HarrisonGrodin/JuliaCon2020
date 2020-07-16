@@ -3,8 +3,6 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
-\usepackage{subcaption}
-\usepackage{tikz}
 \usepackage{amssymb,amsthm,amsmath}
 
 \hypersetup{colorlinks,linkcolor=,urlcolor=magenta}
@@ -13,13 +11,17 @@
   {morekeywords={abstract,begin,break,case,catch,const,continue,do,else,elseif,%
       end,export,false,for,function,immutable,import,importall,if,in,%
       macro,module,otherwise,quote,return,struct,switch,true,try,typealias,%
-      using,while,Union,Any},%
+      using,while,Union,Any,Number,AbstractArray,T,U},%
    sensitive=true,%
    alsoother={\$},%
    morecomment=[l]\#,%
    morecomment=[n]{\#=}{=\#},%
    morestring=[s]{"}{"},%
    morestring=[m]{'}{'},%
+   basicstyle = \ttfamily,
+   keywordstyle = \color{purple},
+   keywordstyle = [2]{\color{violet}},
+   morekeywords = [2]{trait,implement}
 }[keywords,comments,strings]%
 
 
@@ -30,7 +32,8 @@
 }
 
 \lstdefinelanguage{sml}{
-  morekeywords={exn}
+  morekeywords={exn},
+  keywordstyle = \color{blue}
 }
 
 % code inline
@@ -46,11 +49,11 @@
 \else{\lstinline[language=Julia,#1]`#2`}%
 \fi}}
 
-\newcommand{\yikes}{\color{red}\textbf{ (!)}}
+\newcommand{\yikes}{\textbf{\color{red} (!) }}
 
 \begin{document}
 
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{Type Unions}
 
   Terminology: \emph{types} are prescriptive. Some examples:
@@ -95,7 +98,7 @@
   \end{align*}
 
   \begin{itemize}
-    \item All Julia values (of type \julia{Any}) are ``tagged''. Therefore, calling a function requires a case analysis (``method table lookup''), likely incurring a runtime performance penalty. This explains why dynamic dispatch is avoided in critical-path code!
+    \item All Julia values (of type \julia{Any}) are ``tagged''. Therefore, calling a function requires a case analysis (``method table lookup''), incurring a runtime performance penalty. \yikes This explains why dynamic dispatch is avoided in critical-path code!
     \item Similarly, since each Julia ``function'' is a mutable registry covering domain \julia{Any}, type piracy is inherently possible.
   \end{itemize}
 
@@ -106,9 +109,38 @@
     \item This is \emph{less general} than having multiple types! There's no way to guarantee a given input has a given shape; instead, programmers must rely on knowledge of how the compiler optimizes in order to write performant code.
     \item However, \julia{Any} can coexist with other types! For example, ML\footnote{\href{https://smlfamily.github.io/sml97-defn.pdf}{The Definition of Standard ML (Milner, Tofte, Harper, MacQueen)}}-style languages support generative types alongside \sml{exn}, an extensible sum type, like Julia's \julia{Any}.
     \item Otherwise, gradual types%
-    \footnote{\href{https://wphomes.soic.indiana.edu/jsiek/what-is-gradual-typing/}{What is Gradual Typing (Jeremy Siek)}}$^,$%
+    \footnote{\href{https://wphomes.soic.indiana.edu/jsiek/what-is-gradual-typing/}{What is Gradual Typing (Siek)}}$^,$%
     \footnote{\href{http://www.ccs.neu.edu/home/amal/papers/gtt.pdf}{Gradual Type Theory (New, Licata, Ahmed)}}
     could be the answer?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Abstract Types}
+
+  What does it mean for \julia{x::T}, with \julia{T} abstract?
+  \begin{itemize}
+    \item \julia{x::U}, for some concrete \julia{U} with \julia{U <: T}
+  \end{itemize}
+
+  What properties should \julia{U} have if \julia{U <: T}? Often, there is an (implicit) collection of functions which should be implemented for \julia{U}. For example:
+  \begin{itemize}
+    \item If \julia{U <: Number}, then \julia{Base.:+(::U, ::U)::U}, \julia{Base.:*(::U, ::U)::U}, etc. should be defined.
+    \item If \julia{U <: AbstractArray\{Elt\}}, then \julia{Base.length(::U)::Int}, \julia{Base.getindex(::U, ::Int)::Elt}, etc. should be defined.
+  \end{itemize}
+
+  Therefore, \julia{U <: T} means that \julia{U} implements an interface specified by \julia{T}. In other languages, this feature is often called \emph{\href{http://learnyouahaskell.com/types-and-typeclasses}{typeclasses}} or \emph{\href{https://doc.rust-lang.org/book/ch10-02-traits.html}{traits}}.%
+  \footnote{\href{https://github.com/HarrisonGrodin/radical-julia}{\texttt{radical-julia} (Grodin)}}
+
+  \noindent\rule{\linewidth}{0.4pt}
+
+  Benefits:
+  \begin{itemize}
+    \item Traits can still form a hierarchy. For example, $\julia{trait Ordered\{T\} <: Eq\{T\}}$.
+    \item Instances can be automatically derived. For example, $\julia{implement Eq\{Vector\{T\}\} where Eq\{T\}}$.
+    \item Traits can \emph{also} form more complex lattices (``multiple inheritance'')!
+    \item Similar to dynamic dispatch, traits simulate ``overloading,'' allowing a given function to be implemented differently for various types. However, traits are a zero-cost abstraction\footnote{\href{https://blog.rust-lang.org/2015/05/11/traits.html}{Abstraction without overhead: traits in Rust (Turon)}}, allowing the compiler to generate specialized code \emph{before} runtime, leading to faster execution.
+    \item No more runtime ambiguity errors!
   \end{itemize}
 \end{frame}
 
