@@ -7,11 +7,13 @@
 \usepackage{tikz}
 \usepackage{amssymb,amsthm,amsmath}
 
+\hypersetup{colorlinks,linkcolor=,urlcolor=magenta}
+
 \lstdefinelanguage{Julia}%
   {morekeywords={abstract,begin,break,case,catch,const,continue,do,else,elseif,%
       end,export,false,for,function,immutable,import,importall,if,in,%
       macro,module,otherwise,quote,return,struct,switch,true,try,typealias,%
-      using,while,Union},%
+      using,while,Union,Any},%
    sensitive=true,%
    alsoother={\$},%
    morecomment=[l]\#,%
@@ -27,7 +29,9 @@
     basicstyle=\normalfont
 }
 
-\lstdefinelanguage{sml}{}
+\lstdefinelanguage{sml}{
+  morekeywords={exn}
+}
 
 % code inline
 \newrobustcmd{\sml}[2][]{{\sloppy
@@ -78,6 +82,33 @@
     \item More modular -- cases are necessarily disjoint.
     \item Easier to develop efficient data structures, since sums are ``concrete''.
     \item Guaranteed \emph{case exhaustivity} checking! Easy to refactor code.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Dynamic Typing and Dynamic Dispatch}
+
+  In PL theory, types are checked without executing code (i.e. at ``compile-time''). Therefore, ``types'' in Julia aren't types, formally. Instead, Julia has one type -- \julia{Any}, an \emph{extensible sum}\footnote{\href{http://www.cs.cmu.edu/~rwh/pfpl/}{Practical Foundations for Programming Languages, Second Edition (Harper)}: Chapter 33} -- where each ``type'' is a \emph{case}, tagging a value.
+
+  \begin{align*}
+    &\julia{Any} := \julia{Int(int)} \mid \julia{Float(float)} \mid \julia{String(string)} \mid \dots
+  \end{align*}
+
+  \begin{itemize}
+    \item All Julia values (of type \julia{Any}) are ``tagged''. Therefore, calling a function requires a case analysis (``method table lookup''), likely incurring a runtime performance penalty. This explains why dynamic dispatch is avoided in critical-path code!
+    \item Similarly, since each Julia ``function'' is a mutable registry covering domain \julia{Any}, type piracy is inherently possible.
+  \end{itemize}
+
+  \noindent\rule{\linewidth}{0.4pt}
+
+  Conclusions:
+  \begin{itemize}
+    \item This is \emph{less general} than having multiple types! There's no way to guarantee a given input has a given shape; instead, programmers must rely on knowledge of how the compiler optimizes in order to write performant code.
+    \item However, \julia{Any} can coexist with other types! For example, ML\footnote{\href{https://smlfamily.github.io/sml97-defn.pdf}{The Definition of Standard ML (Milner, Tofte, Harper, MacQueen)}}-style languages support generative types alongside \sml{exn}, an extensible sum type, like Julia's \julia{Any}.
+    \item Otherwise, gradual types%
+    \footnote{\href{https://wphomes.soic.indiana.edu/jsiek/what-is-gradual-typing/}{What is Gradual Typing (Jeremy Siek)}}$^,$%
+    \footnote{\href{http://www.ccs.neu.edu/home/amal/papers/gtt.pdf}{Gradual Type Theory (New, Licata, Ahmed)}}
+    could be the answer?
   \end{itemize}
 \end{frame}
 
