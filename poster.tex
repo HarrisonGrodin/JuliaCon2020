@@ -49,7 +49,7 @@
 \else{\lstinline[language=Julia,#1]`#2`}%
 \fi}}
 
-\newcommand{\yikes}{\textbf{\color{red} (!) }}
+\newcommand{\yikes}{\textbf{\color{red}\ (!) }}
 
 \begin{document}
 
@@ -106,7 +106,7 @@
 
   Conclusions:
   \begin{itemize}
-    \item This is \emph{less general} than having multiple types! There's no way to guarantee a given input has a given shape; instead, programmers must rely on knowledge of how the compiler optimizes in order to write performant code.
+    \item This is \emph{less expressive} than having multiple types! There's no way to guarantee a given input has a given shape; instead, programmers must rely on knowledge of how the compiler optimizes in order to write performant code.
     \item However, \julia{Any} can coexist with other types! For example, ML\footnote{\href{https://smlfamily.github.io/sml97-defn.pdf}{The Definition of Standard ML (Milner, Tofte, Harper, MacQueen)}}-style languages support generative types alongside \sml{exn}, an extensible sum type, like Julia's \julia{Any}.
     \item Otherwise, gradual types%
     \footnote{\href{https://wphomes.soic.indiana.edu/jsiek/what-is-gradual-typing/}{What is Gradual Typing (Siek)}}$^,$%
